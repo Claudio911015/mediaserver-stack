@@ -1,0 +1,64 @@
+directory: /path/to/media/musica
+library: ~/.config/beets/library.db
+
+plugins:
+  - fetchart
+  - embedart
+  - lastgenre
+  - lastimport
+  - mbsync
+  - edit
+  - duplicates
+  - missing
+  - info
+  - scrub
+  - plexupdate
+
+import:
+  move: no
+  copy: no
+  write: yes
+  autotag: yes
+  incremental: yes
+  incremental_skip_later: yes
+  quiet: yes
+  resume: yes
+  log: ~/.config/beets/import.log
+
+match:
+  strong_rec_thresh: 0.05
+  medium_rec_thresh: 0.20
+  distance_weights:
+    album: 1.0
+    artist: 1.0
+    totaltracks: 0.4
+    missing_tracks: 0.4
+    unmatched_tracks: 0.4
+    year: 0.1
+
+fetchart:
+  auto: yes
+  sources: [filesystem, coverart, itunes, lastfm, wikipedia]
+  minwidth: 300
+  enforce_ratio: no
+
+embedart:
+  auto: yes
+  maxwidth: 500
+
+lastgenre:
+  auto: yes
+  source: album
+  count: 3
+  separator: ", "
+  canonical: yes
+  api_key: LASTFM_API_KEY
+
+lastimport:
+  username: LASTFM_USERNAME
+  api_key: LASTFM_API_KEY
+
+plexupdate:
+  host: SERVER_IP
+  port: 32400
+  token: PLEX_TOKEN

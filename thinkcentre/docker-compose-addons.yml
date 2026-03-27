@@ -1,0 +1,100 @@
+networks:
+  addonsnet:
+    name: addonsnet
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${ADDONS_SUBNET}
+          gateway: ${ADDONS_GATEWAY}
+
+services:
+
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/mediaserver/config/tautulli:/config
+    ports:
+      - 8181:8181
+    networks:
+      - addonsnet
+    restart: unless-stopped
+
+  decluttarr:
+    image: ghcr.io/manimatter/decluttarr:latest
+    container_name: decluttarr
+    environment:
+      - TZ=${TZ}
+      - LOG_LEVEL=INFO
+      - TEST_RUN=False
+      - RADARR_URL=http://${SERVER_IP}:7878
+      - RADARR_KEY=${RADARR_API_KEY}
+      - SONARR_URL=http://${SERVER_IP}:8989
+      - SONARR_KEY=${SONARR_API_KEY}
+      - LIDARR_URL=http://${SERVER_IP}:8686
+      - LIDARR_KEY=${LIDARR_API_KEY}
+      - QBITTORRENT_URL=http://${SERVER_IP}:${QBIT_PORT}
+      - QBITTORRENT_USERNAME=${QBIT_USERNAME}
+      - QBITTORRENT_PASSWORD=${QBIT_PASSWORD}
+      - REMOVE_STALLED=True
+      - REMOVE_METADATA_MISSING=True
+      - REMOVE_MISSING_FILES=True
+      - REMOVE_NO_FORMAT_UPGRADE=False
+      - REMOVE_ORPHANS=True
+      - MIN_DOWNLOAD_SPEED=100
+      - PERMITTED_ATTEMPTS=3
+      - NO_STALLED_REMOVAL_QBIT_TAG=Don't Kill
+    networks:
+      - addonsnet
+    restart: unless-stopped
+
+  unpackerr:
+    image: golift/unpackerr:latest
+    container_name: unpackerr
+    user: "${PUID}:${PGID}"
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /opt/mediaserver/config/unpackerr/unpackerr.conf:/etc/unpackerr/unpackerr.conf:ro
+      - ${MEDIA_DISK}:${MEDIA_DISK}
+    networks:
+      - addonsnet
+    restart: unless-stopped
+
+  lidify:
+    image: thewicklowwolf/lidify:latest
+    container_name: lidify
+    environment:
+      - TZ=${TZ}
+      - lidarr_address=http://${SERVER_IP}:8686
+      - lidarr_api_key=${LIDARR_API_KEY}
+      - last_fm_api_key=${LASTFM_API_KEY}
+      - lastfm_username=${LASTFM_USERNAME}
+      - number_of_artists=10
+      - search_for_missing_albums=True
+      - thread_limit=1
+    volumes:
+      - /opt/mediaserver/config/lidify:/lidify/config
+    ports:
+      - 5055:5000
+    networks:
+      - addonsnet
+    restart: unless-stopped
+
+  kometa:
+    image: kometateam/kometa:latest
+    container_name: kometa
+    environment:
+      - TZ=${TZ}
+      - KOMETA_CONFIG=/config/config.yml
+      - KOMETA_TIME=03:00
+      - KOMETA_RUN=false
+    volumes:
+      - /opt/mediaserver/config/kometa:/config
+    networks:
+      - addonsnet
+    restart: unless-stopped

@@ -1,0 +1,12 @@
+[Unit]
+Description=NordVPN Watchdog
+After=network-online.target nordvpnd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/nordvpn-watchdog.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

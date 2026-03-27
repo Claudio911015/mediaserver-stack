@@ -1,0 +1,14 @@
+[Unit]
+Description=Plex Media Server Watchdog
+After=network.target plexmediaserver.service
+Wants=plexmediaserver.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/plex-scripts/plex_watchdog.sh start
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

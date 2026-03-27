@@ -1,0 +1,45 @@
+plex:
+  url: http://SERVER_IP:32400
+  token: PLEX_TOKEN
+  timeout: 60
+  clean_bundles: false
+  empty_trash: false
+  optimize: false
+
+tmdb:
+  apikey: TMDB_API_KEY
+  language: es
+  cache_expiration: 60
+
+settings:
+  cache: true
+  cache_expiration: 60
+  asset_directory: config/assets
+  asset_folders: true
+  sync_mode: append
+  minimum_items: 1
+  delete_below_minimum: true
+  run_order:
+    - operations
+    - metadata
+    - collections
+    - overlays
+  overlay_artwork_filetype: webp_lossy
+  overlay_artwork_quality: 90
+
+libraries:
+  Movies:
+    collection_files:
+      - default: basic
+      - default: imdb
+      - default: trakt
+    overlay_files:
+      - default: resolution
+      - default: audio_codec
+  Series:
+    collection_files:
+      - default: basic
+      - default: imdb
+  Music:
+    collection_files:
+      - default: basic

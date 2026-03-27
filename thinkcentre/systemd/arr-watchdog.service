@@ -1,0 +1,16 @@
+[Unit]
+Description=ARR Stack Watchdog
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/arr_watchdog.sh start
+Restart=always
+RestartSec=30
+User=root
+StandardOutput=append:/var/log/arr_watchdog.log
+StandardError=append:/var/log/arr_watchdog.log
+
+[Install]
+WantedBy=multi-user.target

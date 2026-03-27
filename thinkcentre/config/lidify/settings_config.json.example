@@ -1,0 +1,13 @@
+{
+    "lidarr_address": "http://SERVER_IP:8686",
+    "lidarr_api_key": "LIDARR_API_KEY",
+    "root_folder_path": "/path/to/media/musica/",
+    "mode": "Last.fm",
+    "last_fm_api_key": "LASTFM_API_KEY",
+    "auto_start": true,
+    "auto_start_delay": 30,
+    "quality_profile_id": 1,
+    "metadata_profile_id": 1,
+    "search_for_missing_albums": true,
+    "dry_run_adding_to_lidarr": false
+}

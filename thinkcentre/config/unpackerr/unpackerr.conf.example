@@ -1,0 +1,36 @@
+debug = false
+quiet = false
+interval = "2m"
+start_delay = "1m"
+retry_delay = "5m"
+max_retries = 3
+parallel = 1
+file_mode = "0644"
+dir_mode = "0755"
+
+[[radarr]]
+url = "http://SERVER_IP:7878"
+api_key = "RADARR_API_KEY"
+paths = ["/path/to/media/peliculas"]
+protocols = "torrent"
+timeout = "10s"
+delete_delay = "5m"
+delete_orig = false
+
+[[sonarr]]
+url = "http://SERVER_IP:8989"
+api_key = "SONARR_API_KEY"
+paths = ["/path/to/media/series"]
+protocols = "torrent"
+timeout = "10s"
+delete_delay = "5m"
+delete_orig = false
+
+[[lidarr]]
+url = "http://SERVER_IP:8686"
+api_key = "LIDARR_API_KEY"
+paths = ["/path/to/media/musica"]
+protocols = "torrent"
+timeout = "10s"
+delete_delay = "5m"
+delete_orig = false

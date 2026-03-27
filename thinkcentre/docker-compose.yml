@@ -1,0 +1,120 @@
+networks:
+  medianet:
+    name: medianet
+    driver: bridge
+
+services:
+
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - TZ=${TZ}
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - PLEX_UID=${PUID}
+      - PLEX_GID=${PGID}
+    volumes:
+      - /opt/mediaserver/config/plex:/config
+      - /opt/mediaserver/config/plex/transcode:/transcode
+      - ${MEDIA_DISK}:${MEDIA_DISK}:ro
+      - ${SECONDARY_DISK}:${SECONDARY_DISK}:ro
+    devices:
+      - /dev/dri:/dev/dri
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32400/identity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/mediaserver/config/radarr:/config
+      - ${MEDIA_DISK}:${MEDIA_DISK}
+    ports:
+      - 7878:7878
+    networks:
+      - medianet
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/mediaserver/config/sonarr:/config
+      - ${MEDIA_DISK}:${MEDIA_DISK}
+    ports:
+      - 8989:8989
+    networks:
+      - medianet
+    restart: unless-stopped
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:nightly
+    container_name: lidarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/mediaserver/config/lidarr:/config
+      - ${MEDIA_DISK}:${MEDIA_DISK}
+    ports:
+      - 8686:8686
+    networks:
+      - medianet
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/mediaserver/config/prowlarr:/config
+    ports:
+      - 9696:9696
+    networks:
+      - medianet
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/mediaserver/config/bazarr:/config
+      - ${MEDIA_DISK}:${MEDIA_DISK}
+    ports:
+      - 6767:6767
+    networks:
+      - medianet
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - TZ=${TZ}
+    ports:
+      - 8191:8191
+    networks:
+      - medianet
+    restart: unless-stopped
