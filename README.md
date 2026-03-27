@@ -12,7 +12,7 @@ cd mediaserver-stack
 cp .env.example .env
 # Edit .env with your credentials (see "Environment Variables" section)
 # Then:
-cd thinkcentre/
+cd homelab/
 docker compose -f docker-compose.yml up -d
 # Complete initial setup wizards for each *arr app (see Step 3)
 # Update .env with generated API keys
@@ -34,8 +34,8 @@ docker compose -f docker-compose-addons.yml up -d
 9. [Watchdog Script](#watchdog-script)
 10. [Deployment Guide](#deployment-guide)
 11. [Post-Deployment Verification](#post-deployment-verification)
-12. [Raspberry Pi Setup](#raspberry-pi-setup)
-13. [Desktop Workstation (CLAU)](#desktop-workstation-clau)
+12. [Pihole-Node Setup](#pihole-node-setup)
+13. [Personal Computer (Desktop)](#personal-computer-desktop)
 14. [Volume Mounts & Hardlinks](#volume-mounts--hardlinks)
 15. [Firewall (UFW)](#firewall-ufw)
 16. [Monitoring & Troubleshooting](#monitoring--troubleshooting)
@@ -61,7 +61,7 @@ docker compose -f docker-compose-addons.yml up -d
        │                   LOCAL NETWORK (LAN_SUBNET)                   │
        │                                                                │
        │  ┌─────────────────────────────────────────────────────────┐  │
-       │  │         THINKCENTRE M700 (Media Server)                 │  │
+       │  │         HOMELAB (Media Server)                           │  │
        │  │                                                         │  │
        │  │  ┌─────────────────────────────────────────────────┐   │  │
        │  │  │           Docker — Main Stack                    │   │  │
@@ -107,14 +107,13 @@ docker compose -f docker-compose-addons.yml up -d
        │  │  └──────────────────────────────┘                      │  │
        │  │                                                         │  │
        │  │  ┌──────────────────────────────┐                      │  │
-       │  │  │  Storage                     │                      │  │
-       │  │  │  Disk 1 (~4 TB) — media      │                      │  │
-       │  │  │  Disk 2 (~2 TB) — transcode  │                      │  │
+       │  │  │  Storage (1+ disks)           │                      │  │
+       │  │  │  Media disk (4TB+ recommended)│                      │  │
        │  │  └──────────────────────────────┘                      │  │
        │  └─────────────────────────────────────────────────────────┘  │
        │                                                                │
        │  ┌─────────────────────────────────────────────────────────┐  │
-       │  │         RASPBERRY PI 4 (DNS + VPN + Automation)         │  │
+       │  │         PIHOLE-NODE (DNS + VPN + Automation)         │  │
        │  │                                                         │  │
        │  │  ┌──────────┐  ┌──────────────┐  ┌──────────────────┐ │  │
        │  │  │ Pi-hole  │  │   NordVPN    │  │  Cron: briefing  │ │  │
@@ -128,7 +127,7 @@ docker compose -f docker-compose-addons.yml up -d
        │  └─────────────────────────────────────────────────────────┘  │
        │                                                                │
        │  ┌─────────────────────────────────────────────────────────┐  │
-       │  │         CLAU (Desktop Workstation)                      │  │
+       │  │         Desktop (Personal Computer)                      │  │
        │  │                                                         │  │
        │  │  ┌──────────────┐  ┌─────────────┐  ┌──────────────┐  │  │
        │  │  │ Plex (legacy │  │  Nicotine+  │  │  Tailscale   │  │  │
@@ -146,17 +145,17 @@ docker compose -f docker-compose-addons.yml up -d
 
 ## Machine Roles
 
-### ThinkCentre M700 — Media Server
+### Homelab Server — Media Server
 
 | Property | Value |
 |---|---|
 | Role | Primary media server: runs all Docker workloads, downloads, Plex |
 | OS | Ubuntu 24.04 LTS |
 | IP | Static LAN IP (set in `.env` as `SERVER_IP`) |
-| Storage | Disk 1 (~4 TB, primary media), Disk 2 (~2 TB, Plex transcode temp) |
+| Storage | 1+ disks. Minimum: one media disk (4 TB+ recommended). Optional: a second disk for Plex transcode temp (reduces wear on media disk). |
 | RAM | 8 GB minimum recommended (16 GB for concurrent transcoding + Kometa) |
 
-### Raspberry Pi 4 — DNS + VPN + Automation
+### Pihole-Node — DNS + VPN + Automation
 
 | Property | Value |
 |---|---|
@@ -165,7 +164,7 @@ docker compose -f docker-compose-addons.yml up -d
 | IP | Static IP on eth0 (WiFi disabled for reliability) |
 | Connection | Wired Ethernet only |
 
-### CLAU — Desktop Workstation
+### Desktop — Desktop Workstation
 
 | Property | Value |
 |---|---|
@@ -248,8 +247,8 @@ Decluttarr (runs continuously every ~2 min)
 
 ```
 All LAN devices ──DNS──→ Pi-hole (blocks ads/trackers) ──→ upstream DNS
-Raspberry Pi ──────────→ NordVPN tunnel (NordLynx/WireGuard)
-CLAU desktop ──────────→ NordVPN + Tailscale (VPN + remote access)
+Pihole-node ──────────→ NordVPN tunnel (NordLynx/WireGuard)
+Desktop PC ──────────→ NordVPN + Tailscale (VPN + remote access)
 ```
 
 ---
@@ -274,7 +273,7 @@ CLAU desktop ──────────→ NordVPN + Tailscale (VPN + remote
 | **arr-watchdog** | All Docker containers (health check via HTTP or container state) | Docker API + HTTP |
 | **Pi-hole** | All LAN devices (DNS resolver) | DNS (port 53) |
 | **NordVPN watchdog** | NordVPN daemon, Telegram API (alerts) | CLI + HTTPS |
-| **Magnet handler (CLAU)** | qBittorrent on ThinkCentre (sends categorized magnet links) | HTTP API |
+| **Magnet handler (desktop)** | qBittorrent on homelab (sends categorized magnet links) | HTTP API |
 
 ---
 
@@ -295,8 +294,8 @@ PUID=1000
 PGID=1000
 
 # ─── Storage Paths ────────────────────────────────────────
-MEDIA_DISK=/path/to/primary/disk    # e.g., /media/user/disk
-SECONDARY_DISK=/path/to/second/disk # e.g., /media/user/disk2 (for Plex transcode)
+MEDIA_DISK=/path/to/media/disk      # e.g., /media/user/disk (4TB+ recommended)
+SECONDARY_DISK=                     # Optional: second disk for Plex transcode temp (leave empty to use MEDIA_DISK)
 MOVIES_DIR=${MEDIA_DISK}/peliculas
 SERIES_DIR=${MEDIA_DISK}/series
 MUSIC_DIR=${MEDIA_DISK}/musica
@@ -329,7 +328,7 @@ LASTFM_USERNAME=your_lastfm_username
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 TELEGRAM_CHAT_ID=your_telegram_chat_id
 
-# ─── NordVPN (optional, for Raspberry Pi) ────────────────
+# ─── NordVPN (optional, for pihole-node) ────────────────
 NORDVPN_TOKEN=your_nordvpn_token
 
 # ─── Docker Networks ─────────────────────────────────────
@@ -370,7 +369,8 @@ services:
       - /opt/mediaserver/config/plex:/config
       - /opt/mediaserver/config/plex/transcode:/transcode
       - ${MEDIA_DISK}:${MEDIA_DISK}:ro
-      - ${SECONDARY_DISK}:${SECONDARY_DISK}:ro
+      # Optional: uncomment if using a second disk for transcode temp
+      # - ${SECONDARY_DISK}:${SECONDARY_DISK}:ro
     devices:
       - /dev/dri:/dev/dri    # Intel QuickSync hardware transcoding
     restart: unless-stopped
@@ -719,7 +719,7 @@ Auto-generated on first launch. Key fields to modify:
 
 ### Beets — `~/.config/beets/config.yaml`
 
-Installed natively (not Docker). Run on the ThinkCentre host.
+Installed natively (not Docker). Run on the homelab host.
 
 ```yaml
 directory: /path/to/media/musica
@@ -935,10 +935,10 @@ WantedBy=multi-user.target
 ### Prerequisites
 
 - Ubuntu 22.04+ server with Docker Engine + Docker Compose V2
-- At least 2 storage disks (recommended: ~4 TB primary, ~2 TB secondary)
+- At least 1 storage disk (4 TB+ recommended). A second disk is optional for Plex transcode temp.
 - Open ports: 32400/tcp (Plex), 35902/tcp+udp (qBittorrent P2P)
 - A Plex account (Plex Pass recommended for hardware transcoding)
-- Optional: Raspberry Pi 4 for DNS/VPN, desktop Linux for CLAU role
+- Optional: Pihole-Node for DNS/VPN, desktop Linux for desktop role
 
 ### Step 1: Prepare the Server
 
@@ -1108,7 +1108,7 @@ Run through this checklist after deployment:
 
 ---
 
-## Raspberry Pi Setup
+## Pihole-Node Setup
 
 ### Pi-hole (DNS Ad Blocking)
 
@@ -1248,20 +1248,20 @@ WantedBy=multi-user.target
 
 ---
 
-## Desktop Workstation (CLAU)
+## Personal Computer (Desktop)
 
-The desktop machine serves as the primary user interface and runs some services that haven't been migrated to the ThinkCentre yet.
+The desktop machine serves as the primary user interface and runs some services that haven't been migrated to the homelab yet.
 
 ### Active Services
 
 | Service | Purpose |
 |---|---|
-| Plex (legacy) | Still running during migration. Will be deactivated once ThinkCentre Plex is fully verified. |
+| Plex (legacy) | Still running during migration. Will be deactivated once homelab Plex is fully verified. |
 | Nicotine+ (Soulseek) | P2P music sharing. Shares music library with the Soulseek network. |
 | NordVPN + watchdog | VPN for desktop privacy. Watchdog checks connection every 60s. |
 | Tailscale | Mesh VPN for remote access to this machine from anywhere. |
-| Magnet handler | Custom script that intercepts magnet links from the browser, auto-categorizes them (movies, series, music), and sends them to qBittorrent on the ThinkCentre. |
-| KAT scraper | Python script that searches KickassTorrents and bulk-adds results to qBittorrent on the ThinkCentre. |
+| Magnet handler | Custom script that intercepts magnet links from the browser, auto-categorizes them (movies, series, music), and sends them to qBittorrent on the homelab. |
+| KAT scraper | Python script that searches KickassTorrents and bulk-adds results to qBittorrent on the homelab. |
 
 ### Performance Optimizations
 
@@ -1293,7 +1293,7 @@ ${MEDIA_DISK}/peliculas/downloads/  (same)                       qBittorrent "Mo
 ${MEDIA_DISK}/series/               (same)                       Sonarr root folder
 ${MEDIA_DISK}/series/downloads/     (same)                       qBittorrent "Series" category
 ${MEDIA_DISK}/musica/               (same)                       Lidarr root folder
-${SECONDARY_DISK}                   ${SECONDARY_DISK}            Plex (transcode temp)
+${SECONDARY_DISK} (optional)        ${SECONDARY_DISK}            Plex transcode temp (falls back to MEDIA_DISK if not set)
 ```
 
 **Key:** Both the Compose files and qBittorrent use identical absolute paths (`${MEDIA_DISK}/peliculas/downloads`). This ensures hardlinks work because the *arr app sees the same path as the download client.
@@ -1433,7 +1433,7 @@ docker compose -f docker-compose-addons.yml up -d
 
 ## Resource Usage
 
-Estimated resource consumption on the ThinkCentre:
+Estimated resource consumption on the homelab:
 
 | State | RAM | CPU |
 |---|---|---|
@@ -1450,22 +1450,22 @@ Estimated resource consumption on the ThinkCentre:
 
 ## Migration Status
 
-The stack is being migrated from CLAU (desktop) to ThinkCentre (server). Current state:
+The stack is being migrated from desktop (personal computer) to homelab (server). Current state:
 
 | Component | Status | Location |
 |---|---|---|
-| qBittorrent | Migrated | ThinkCentre (systemd) |
-| Plex | **Dual-running** | ThinkCentre (Docker) + CLAU (legacy) |
-| Physical disks | Migrated | ThinkCentre |
-| Magnet handler | Migrated | ThinkCentre |
-| Temp controller | Migrated | ThinkCentre |
-| Samba | Migrated | ThinkCentre |
-| All *arr apps | Migrated | ThinkCentre (Docker) |
-| All addons | New | ThinkCentre (Docker) |
-| Nicotine+ (Soulseek) | **Pending** | Still on CLAU |
-| Plex (disable on CLAU) | **Pending** | CLAU → will be deactivated |
+| qBittorrent | Migrated | homelab (systemd) |
+| Plex | **Dual-running** | homelab (Docker) + desktop (legacy) |
+| Physical disks | Migrated | homelab |
+| Magnet handler | Migrated | homelab |
+| Temp controller | Migrated | homelab |
+| Samba | Migrated | homelab |
+| All *arr apps | Migrated | homelab (Docker) |
+| All addons | New | homelab (Docker) |
+| Nicotine+ (Soulseek) | **Pending** | Still on desktop |
+| Plex (disable on desktop) | **Pending** | desktop → will be deactivated |
 
-**End state:** All media services run on ThinkCentre. CLAU only runs Nicotine+ (Soulseek), NordVPN, Tailscale, and desktop tools.
+**End state:** All media services run on homelab. Desktop only runs Nicotine+ (Soulseek), NordVPN, Tailscale, and desktop tools.
 
 ---
 

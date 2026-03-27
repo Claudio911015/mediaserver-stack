@@ -18,7 +18,8 @@ services:
       - /opt/mediaserver/config/plex:/config
       - /opt/mediaserver/config/plex/transcode:/transcode
       - ${MEDIA_DISK}:${MEDIA_DISK}:ro
-      - ${SECONDARY_DISK}:${SECONDARY_DISK}:ro
+      # Optional: uncomment if using a second disk for transcode temp
+      # - ${SECONDARY_DISK}:${SECONDARY_DISK}:ro
     devices:
       - /dev/dri:/dev/dri
     restart: unless-stopped

@@ -1,6 +1,6 @@
 #!/bin/bash
 # nordvpn-watchdog.sh — Keeps NordVPN connected with auto-reconnect + Telegram alerts
-# Deploy on Raspberry Pi as a systemd service
+# Deploy on pihole-node as a systemd service
 
 TELEGRAM_TOKEN="${TELEGRAM_BOT_TOKEN}"   # set via env or replace with your token
 CHAT_ID="${TELEGRAM_CHAT_ID}"            # set via env or replace with your chat ID
