@@ -42,6 +42,7 @@ docker compose -f docker-compose-addons.yml up -d
 17. [Backup & Restore](#backup--restore)
 18. [Resource Usage](#resource-usage)
 19. [Migration Status](#migration-status)
+20. [Automation Scripts](#automation-scripts)
 
 ---
 
@@ -1466,6 +1467,63 @@ The stack is being migrated from desktop (personal computer) to homelab (server)
 | Plex (disable on desktop) | **Pending** | desktop → will be deactivated |
 
 **End state:** All media services run on homelab. Desktop only runs Nicotine+ (Soulseek), NordVPN, Tailscale, and desktop tools.
+
+---
+
+## Automation Scripts
+
+All scripts live in `scripts/`. They use environment variables for credentials — no hardcoded values.
+
+| Script | Run on | Purpose |
+|---|---|---|
+| `arr_watchdog.sh` | homelab | Monitors all Docker containers every 60s, auto-restarts crashed/unresponsive ones |
+| `qbittorrent-temp-controller.sh` | homelab | Pauses qBittorrent if CPU temp exceeds threshold, resumes when cooled |
+| `nordvpn-watchdog.sh` | pihole-node | Keeps NordVPN connected, sends Telegram alerts on state changes |
+| `kat_scraper.py` | desktop | Scrapes KickassTorrents and bulk-sends magnet links to qBittorrent |
+| `magnet_handler.py` | desktop | Intercepts magnet links from the browser, auto-detects category (Movies/Series/Music/Books), forwards to qBittorrent |
+| `lidarr_bulk_add.py` | homelab | Bulk-adds artists to Lidarr from a list of folder names via MusicBrainz lookup |
+| `lidarr_retry_add.py` | homelab | Retries failed artist additions to Lidarr |
+| `plex_to_lidarr.py` | homelab | Copies artist thumbnails from Plex to Lidarr's MediaCover directory |
+
+### Environment Variables for Scripts
+
+```bash
+# qBittorrent (kat_scraper.py, magnet_handler.py)
+export QBIT_URL="http://your_server_ip:8080"
+export QBIT_USER="your_qbit_username"
+export QBIT_PASS="your_qbit_password"
+export MEDIA_DISK="/path/to/media/disk"
+
+# Lidarr (lidarr_bulk_add.py, lidarr_retry_add.py, plex_to_lidarr.py)
+export LIDARR_URL="http://your_server_ip:8686"
+export LIDARR_KEY="your_lidarr_api_key"
+export LIDARR_ROOT="/music"
+
+# Plex (plex_to_lidarr.py)
+export PLEX_URL="http://your_server_ip:32400"
+export PLEX_TOKEN="your_plex_token"
+export LIDARR_HOST="user@your_server_ip"   # omit if Lidarr is local
+export LIDARR_MC_PATH="/config/MediaCover"
+```
+
+### Installing magnet_handler.py as xdg handler
+
+```bash
+sudo cp scripts/magnet_handler.py /usr/local/bin/magnet-handler
+sudo chmod +x /usr/local/bin/magnet-handler
+
+# Create desktop entry
+sudo tee /usr/share/applications/magnet-handler.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=Magnet Handler
+Exec=/usr/local/bin/magnet-handler %u
+MimeType=x-scheme-handler/magnet;
+NoDisplay=true
+EOF
+
+xdg-mime default magnet-handler.desktop x-scheme-handler/magnet
+```
 
 ---
 
