@@ -16,6 +16,7 @@ declare -A SERVICES=(
     [bazarr]="http://localhost:6767"
     [tautulli]="http://localhost:8181/status"
     [lidify]="http://localhost:5055"
+    [artist-discover]="http://localhost:5001"
     [decluttarr]="skip"
     [unpackerr]="skip"
     [kometa]="skip"
@@ -64,7 +65,7 @@ monitor() {
 
 show_status() {
     echo "=== CONTAINER STATUS ==="
-    for name in radarr sonarr lidarr prowlarr bazarr tautulli lidify decluttarr unpackerr kometa; do
+    for name in radarr sonarr lidarr prowlarr bazarr tautulli lidify artist-discover decluttarr unpackerr kometa; do
         state=$(docker inspect --format '{{.State.Status}}' "$name" 2>/dev/null || echo "not found")
         printf "  %-15s %s\n" "$name" "$state"
     done
