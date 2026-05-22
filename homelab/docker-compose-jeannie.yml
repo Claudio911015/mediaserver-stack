@@ -1,0 +1,21 @@
+services:
+
+  jeannie-booking-bot:
+    build:
+      context: ../jeannie-booking-bot
+    container_name: jeannie-booking-bot
+    environment:
+      - TZ=${TZ}
+      - PORT=5000
+      # Persistent volume path — must match the bind mount below
+      - RAILWAY_VOLUME_MOUNT_PATH=/data
+      # Soho House OAuth credentials (see .env.example)
+      - CLIENT_ID=${SOHO_CLIENT_ID}
+      - IDENTITY_BASE_URL=${SOHO_IDENTITY_BASE_URL}
+      - REDIRECT_URI=${SOHO_REDIRECT_URI}
+    volumes:
+      # Persists soho_tokens.json and last_booking.json across restarts
+      - /opt/mediaserver/config/jeannie-booking-bot:/data
+    ports:
+      - 5050:5000
+    restart: unless-stopped

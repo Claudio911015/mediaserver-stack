@@ -1527,6 +1527,75 @@ xdg-mime default magnet-handler.desktop x-scheme-handler/magnet
 
 ---
 
+## Jeannie Booking Bot
+
+Automated poolside bed booking at Soho House venues. Books 1:30 PM slots 48 hours in advance using the Soho House mobile API with OAuth 2.0 / PKCE authentication.
+
+Upstream source: [1ShoukR/jeannie-booking-bot](https://github.com/1ShoukR/jeannie-booking-bot)
+
+### Architecture
+
+The container runs two processes via supervisord (mirroring the upstream Railway `web` + `worker` Procfile):
+
+| Process | Description |
+|---|---|
+| `gunicorn` | Flask app on port 5000 — dashboard, booking endpoints, APScheduler (daily noon booking) |
+| `cron.py` | External worker — token refresh every 5 min, redundant daily noon booking |
+
+### Quick Start
+
+```bash
+# 1. Build the image (clones source from GitHub at build time)
+cd homelab/
+docker compose -f docker-compose-jeannie.yml build
+
+# 2. Start the container
+docker compose -f docker-compose-jeannie.yml up -d
+
+# 3. Complete OAuth login (one-time, tokens saved to /data/soho_tokens.json)
+#    Open a browser and visit:
+open http://<SERVER_IP>:5050/start-auth
+#    Log in with your Soho House credentials, then call:
+curl -X POST http://<SERVER_IP>:5050/complete-auth \
+     -H "Content-Type: application/json" \
+     -d '{"code": "<code-from-callback>", "state": "<state-from-callback>"}'
+```
+
+### Environment Variables
+
+| Variable | Description |
+|---|---|
+| `SOHO_CLIENT_ID` | Soho House OAuth app client ID |
+| `SOHO_IDENTITY_BASE_URL` | Soho House auth server base URL |
+| `SOHO_REDIRECT_URI` | OAuth redirect URI (must match registered app config) |
+
+### Dashboard Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `GET /` | Web dashboard |
+| `GET /status` | Token validity and expiration |
+| `GET /last-booking-status` | Previous booking attempt result |
+| `POST /auto-book` | Trigger booking manually |
+| `GET /pool-venues` | List supported venue IDs |
+
+### Persistent Storage
+
+Tokens and booking state are saved to `/opt/mediaserver/config/jeannie-booking-bot/` on the host (bind-mounted to `/data` inside the container).
+
+| File | Contents |
+|---|---|
+| `soho_tokens.json` | OAuth access + refresh tokens |
+| `last_booking.json` | Last booking attempt outcome |
+
+### Ports
+
+| Port | Service |
+|---|---|
+| `5050` | Jeannie web dashboard |
+
+---
+
 ## License
 
 MIT
