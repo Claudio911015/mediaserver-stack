@@ -142,6 +142,8 @@ docker compose -f docker-compose-addons.yml up -d
        └────────────────────────────────────────────────────────────────┘
 ```
 
+> Note: the plex-watchdog script referenced by `homelab/systemd/plex-watchdog.service` is not shipped in this repo — provide your own.
+
 ---
 
 ## Machine Roles
@@ -1370,7 +1372,7 @@ docker logs kometa --tail 100
 | Lidarr plugins missing | Using stable image | Must use `lidarr:nightly`. Check: `docker inspect lidarr --format '{{.Config.Image}}'` |
 | Beets import fails | Bad match | Run `beet import -t /path` (timid mode) to preview matches |
 | High CPU from Kometa | Normal during nightly run | Takes 15-30 min depending on library size. Runs at 3 AM by default. |
-| qBittorrent paused | Temperature protection | Check `journalctl -u qbittorrent-temp-control` — CPU was too hot |
+| qBittorrent paused | Temperature protection | Check `/var/log/qbittorrent-temp.log` — CPU was too hot |
 | Unpackerr not extracting | Config paths wrong | Paths in `unpackerr.conf` must match host paths, not container paths |
 
 ---
@@ -1484,6 +1486,7 @@ All scripts live in `scripts/`. They use environment variables for credentials �
 | `lidarr_bulk_add.py` | homelab | Bulk-adds artists to Lidarr from a list of folder names via MusicBrainz lookup |
 | `lidarr_retry_add.py` | homelab | Retries failed artist additions to Lidarr |
 | `plex_to_lidarr.py` | homelab | Copies artist thumbnails from Plex to Lidarr's MediaCover directory |
+| `plex-watchdog.service` | homelab | References `/usr/local/bin/plex-scripts/plex_watchdog.sh` — this script is NOT included in this repo; you must supply your own health-check/restart script for Plex before enabling the unit |
 
 ### Environment Variables for Scripts
 
@@ -1507,6 +1510,8 @@ export LIDARR_MC_PATH="/config/MediaCover"
 ```
 
 ### Installing magnet_handler.py as xdg handler
+
+Note: magnet_handler.py does not authenticate with qBittorrent's WebAPI — enable "Bypass authentication for clients on localhost" in qBittorrent's Web UI settings, otherwise torrent adds will silently fail and fall back to launching the desktop qbittorrent GUI.
 
 ```bash
 sudo cp scripts/magnet_handler.py /usr/local/bin/magnet-handler

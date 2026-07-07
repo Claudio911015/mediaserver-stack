@@ -34,13 +34,13 @@ while true; do
 
     if [[ $temp -ge $TEMP_THRESHOLD ]] && [[ "$paused" == false ]]; then
         if pgrep -x "$QBITTORRENT_PROCESS" > /dev/null; then
-            pkill -STOP "$QBITTORRENT_PROCESS"
+            pkill -x -STOP "$QBITTORRENT_PROCESS"
             paused=true
             pause_start=$(date +%s)
             log_message "PAUSED qBittorrent — CPU temp: ${temp}C (threshold: ${TEMP_THRESHOLD}C)"
         fi
     elif [[ $temp -lt $((TEMP_THRESHOLD - 10)) ]] && [[ "$paused" == true ]]; then
-        pkill -CONT "$QBITTORRENT_PROCESS"
+        pkill -x -CONT "$QBITTORRENT_PROCESS"
         paused=false
         log_message "RESUMED qBittorrent — CPU temp: ${temp}C"
     fi
@@ -50,7 +50,7 @@ while true; do
         now=$(date +%s)
         elapsed=$((now - pause_start))
         if [[ $elapsed -ge $MAX_PAUSE_TIME ]]; then
-            pkill -CONT "$QBITTORRENT_PROCESS"
+            pkill -x -CONT "$QBITTORRENT_PROCESS"
             paused=false
             log_message "FORCE RESUMED qBittorrent after ${elapsed}s pause — CPU temp: ${temp}C"
         fi

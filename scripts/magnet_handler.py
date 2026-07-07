@@ -12,6 +12,9 @@ Then register as the magnet: URI handler:
 
 Environment variables:
   QBIT_URL  → qBittorrent WebUI URL (default: http://localhost:8080)
+
+Requires qBittorrent WebUI option "Bypass authentication for clients on localhost"
+enabled, since this script POSTs to /api/v2/torrents/add without logging in.
 """
 
 import sys
@@ -112,7 +115,10 @@ def main():
         else:
             notify("qBittorrent", f"Added: {name[:60]}\nNo category detected")
     else:
-        subprocess.Popen(["qbittorrent", magnet])
+        try:
+            subprocess.Popen(["qbittorrent", magnet])
+        except FileNotFoundError:
+            notify("qBittorrent", "Failed to add torrent and qbittorrent GUI is not installed")
 
 if __name__ == "__main__":
     main()
